@@ -1,8 +1,0 @@
-{
-  "devDependencies": {
-    "sass": "^1.105.1"
-  },
-  "dependencies": {
-    "reicon-react": "^1.2.6"
-  }
-}
