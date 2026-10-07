@@ -1,0 +1,101 @@
+@font-face {
+  font-family: "Haffer";
+  src:
+    url("../assets/fonts/haffer/HafferXH-TRIAL-Regular.woff2") format("woff2"),
+    url("../assets/fonts/haffer/HafferXH-TRIAL-Regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Haffer";
+  src:
+    url("../assets/fonts/haffer/HafferXH-TRIAL-Medium.woff2") format("woff2"),
+    url("../assets/fonts/haffer/HafferXH-TRIAL-Medium.woff") format("woff");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Haffer";
+  src:
+    url("../assets/fonts/haffer/HafferXH-TRIAL-SemiBold.woff2") format("woff2"),
+    url("../assets/fonts/haffer/HafferXH-TRIAL-SemiBold.woff") format("woff");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Haffer";
+  src:
+    url("../assets/fonts/haffer/HafferXH-TRIAL-RegularItalic.woff2")
+      format("woff2"),
+    url("../assets/fonts/haffer/HafferXH-TRIAL-RegularItalic.woff")
+      format("woff");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  font-family: "Haffer", system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #0b0f0e;
+  background: #eff4f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #fff;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  font-family: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
