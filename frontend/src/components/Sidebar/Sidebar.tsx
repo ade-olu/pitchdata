@@ -19,7 +19,7 @@ import bundesligaLogo from "../../assets/sidebar/bundesliga-logo.svg";
 import ligue1Logo from "../../assets/sidebar/ligue-1-logo.svg";
 
 // League codes (same as the ones used in the API) for the leagues in the sidebar
-export type LeagueCode = "PL" | "LL" | "SA" | "BL1" | "L1";
+export type LeagueCode = "PL" | "PD" | "SA" | "BL1" | "FL1";
 
 // Props for the icon components, allowing for optional className to be passed in
 type IconProps = {
@@ -40,10 +40,10 @@ const PAGES: { path: string; name: string; icon: ComponentType<IconProps> }[] =
 // Sidebar leagues and their corresponding logos
 const LEAGUES: { code: LeagueCode; name: string; logo: string }[] = [
   { code: "PL", name: "Premier League", logo: premierLeagueLogo },
-  { code: "LL", name: "La Liga", logo: laLigaLogo },
+  { code: "PD", name: "La Liga", logo: laLigaLogo },
   { code: "SA", name: "Serie A", logo: serieALogo },
   { code: "BL1", name: "Bundesliga", logo: bundesligaLogo },
-  { code: "L1", name: "Ligue 1", logo: ligue1Logo },
+  { code: "FL1", name: "Ligue 1", logo: ligue1Logo },
 ];
 
 // Props for the Sidebar component, including the selected league and a callback for selecting a league

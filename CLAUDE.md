@@ -8,7 +8,7 @@ pitchdata is a football (soccer) season-stats app for the 2025/26 season of five
 
 1. **Python ingestion pipeline** (`backend/0N_*.py`) pulls data from football-data.org v4 and writes it to SQLite.
 2. **Express API** (`backend/api/`) serves that database read-only as JSON on port 3001.
-3. **React frontend** (`frontend/`, Vite + TypeScript + React 19 with React Compiler) is still the unmodified Vite template and isn't wired to the API yet.
+3. **React frontend** (`frontend/`, Vite + TypeScript + React 19 with React Compiler, SCSS, react-router-dom) is in early development. So far it has only an app shell with a `Sidebar`. It doesn't call the API yet and has no `<Routes>`.
 
 There is no test suite anywhere in the repo.
 
@@ -40,6 +40,7 @@ node server.js      # http://localhost:3001; there is no npm start script
 npm run dev        # Vite dev server
 npm run build      # tsc -b && vite build
 npm run lint       # eslint
+npm run preview    # serve the production build
 ```
 
 ## Architecture notes
@@ -56,3 +57,11 @@ npm run lint       # eslint
 - The API opens the database with `readonly: true, fileMustExist: true`. Stop the server before running `01_create_database.py`, because Windows won't delete a file that's open.
 - Routes: `/api/leagues`, `/api/leagues/:code/{standings,matches?matchday=,scorers?limit=}`, `/api/clubs/:id`, `/api/clubs/:id/matches`. League codes are uppercased before lookup.
 - `football.db` is committed to git.
+
+## Frontend notes
+
+- **Layout:** `main.tsx` wraps `<App>` in `BrowserRouter`. `App.tsx` renders `<Sidebar>` plus an empty `<main className="app__main">` and keeps the selected league in `useState`. Components go in `src/components/<Name>/<Name>.tsx` with a matching `<Name>.scss` beside them. Global styles are in `src/styles/`.
+- **Styling:** plain SCSS with BEM class names (`sidebar__nav-item--active`). Colors are SCSS variables at the top of each component file. There are no shared tokens yet. `index.scss` declares the self-hosted **Haffer** font (trial `.woff`/`.woff2` files in `src/assets/fonts/haffer/`) and holds the CSS reset.
+- **Icons** come from `reicon-react`. League logos are SVGs in `src/assets/sidebar/`.
+- **Sidebar navigation:** the page links (`/`, `/standings`, `/matches`, `/player-stats`, `/clubs`, `/about`) are `NavLink`s to routes that don't exist yet. League selection is separate. It's a button that calls `onSelectLeague` and doesn't change the URL.
+- **League codes:** the `LeagueCode` type in `Sidebar.tsx` uses football-data.org's codes (`PL`, `PD`, `SA`, `BL1`, `FL1`), the same ones the database and API use. Pass them straight to `/api/leagues/:code/...`. Don't swap in friendlier codes like `LL` or `L1`, because the API will return 404 for them.
