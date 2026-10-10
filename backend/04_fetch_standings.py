@@ -1,11 +1,12 @@
 """
 04_fetch_standings.py
 
-Fetches league standings for the 2025/26 season across the same 5
-leagues used in the other scripts, merges the TOTAL/HOME/AWAY tables
+Fetches league standings for every season in SEASONS across the same
+5 leagues used in the other scripts, merges the TOTAL/HOME/AWAY tables
 football-data.org returns into one combined row per club, and saves
 that into club_season_stats. Also records each season's champion
-(the club in 1st place in the TOTAL table).
+(the club in 1st place in the TOTAL table), but only once the
+season's end date has passed.
 
 Unlike 02 and 03, this script uses INSERT OR REPLACE instead of
 INSERT OR IGNORE. Matches and scorer counts are historical facts that
@@ -17,13 +18,15 @@ latest standings rather than leave the old ones in place.
 
 import time
 import sqlite3
+from datetime import date
 import requests
 
 
 DB_FILE = "football.db"
 API_KEY_FILE = "api_key.txt"
 
-SEASON_START_YEAR = 2025
+# Kept in sync with SEASONS in 02_fetch_matches.py
+SEASONS = [2023, 2024, 2025]
 
 # Kept as its own copy so this script can run independently of the others
 LEAGUES = [
@@ -34,7 +37,8 @@ LEAGUES = [
     {"id": 2015, "name": "Ligue 1",         "code": "FL1"},
 ]
 
-SECONDS_BETWEEN_LEAGUES = 3
+# Pause between requests to stay under the free tier's 10 calls/minute
+SECONDS_BETWEEN_REQUESTS = 7
 
 
 def load_api_key():
@@ -42,9 +46,9 @@ def load_api_key():
         return f.read().strip()
 
 
-def fetch_standings(api_key, league_code):
+def fetch_standings(api_key, league_code, start_year):
     headers = {"X-Auth-Token": api_key}
-    params = {"season": SEASON_START_YEAR}
+    params = {"season": start_year}
 
     url = f"https://api.football-data.org/v4/competitions/{league_code}/standings"
     response = requests.get(url, headers=headers, params=params)
@@ -55,26 +59,24 @@ def fetch_standings(api_key, league_code):
             f"{response.status_code}: {response.text}"
         )
 
-    data = response.json()
-
-    # The response contains a list of table blocks (TOTAL, HOME, AWAY) rather than a single table  
-    # build_club_stats() below sorts out which block is which
-    return data["standings"]
+    # data["standings"] is a list of table blocks (TOTAL, HOME, AWAY) rather than a single table,
+    # build_club_stats() below sorts out which block is which. data["season"] holds the season's dates
+    return response.json()
 
 
-def get_season_id(cursor, league_id):
+def get_season_id(cursor, league_id, start_year):
     # Look-up only - this script expects 02_fetch_matches.py to have
     # already created the season row.
     cursor.execute(
         "SELECT season_id FROM seasons WHERE league_id = ? AND start_year = ?",
-        (league_id, SEASON_START_YEAR),
+        (league_id, start_year),
     )
     row = cursor.fetchone()
 
     if row is None:
         raise Exception(
             f"No season found for league_id {league_id}, start_year "
-            f"{SEASON_START_YEAR}. Run 02_fetch_matches.py for this "
+            f"{start_year}. Run 02_fetch_matches.py for this "
             "league first."
         )
 
@@ -143,9 +145,15 @@ def build_club_stats(standings):
     return stats
 
 
-def find_champion_club_id(standings):
-    # Find the club in position 1 of the TOTAL table. Returns None if
-    # there's no clear #1 yet (e.g. season still in progress)
+def find_champion_club_id(standings, season):
+    # Find the club in position 1 of the TOTAL table. Returns None while
+    # the season is still in progress, so the current leader isn't
+    # recorded as champion. Uses the season's end date rather than
+    # playedGames, because AWARDED matches (results given without the game
+    # being played) aren't counted in playedGames
+    if date.fromisoformat(season["endDate"]) >= date.today():
+        return None
+
     for block in standings:
         if block.get("type") == "TOTAL":
             for row in block["table"]:
@@ -215,28 +223,34 @@ def main():
     connection = sqlite3.connect(DB_FILE)
     cursor = connection.cursor()
 
-    for i, league in enumerate(LEAGUES, start=1):
-        print(f"\n[{i}/{len(LEAGUES)}] {league['name']} ({league['code']})")
+    jobs = [(year, league) for year in SEASONS for league in LEAGUES]
 
-        season_id = get_season_id(cursor, league["id"])
-        standings = fetch_standings(api_key, league["code"])
+    for i, (year, league) in enumerate(jobs, start=1):
+        print(f"\n[{i}/{len(jobs)}] {league['name']} ({league['code']}) {year}")
+
+        season_id = get_season_id(cursor, league["id"], year)
+        data = fetch_standings(api_key, league["code"], year)
+        standings = data["standings"]
 
         club_stats = build_club_stats(standings)
         save_club_stats(cursor, club_stats, season_id)
 
-        champion_club_id = find_champion_club_id(standings)
+        champion_club_id = find_champion_club_id(standings, data["season"])
         save_champion(cursor, season_id, champion_club_id)
 
         connection.commit()
 
         print(f"  season_id = {season_id}")
 
-        if i < len(LEAGUES):
-            time.sleep(SECONDS_BETWEEN_LEAGUES)
+        if i < len(jobs):
+            time.sleep(SECONDS_BETWEEN_REQUESTS)
 
     connection.close()
 
-    print(f"\nDone. Fetched and saved standings for {len(LEAGUES)} leagues.")
+    print(
+        f"\nDone. Fetched and saved standings for {len(LEAGUES)} leagues "
+        f"x {len(SEASONS)} seasons."
+    )
 
 
 if __name__ == "__main__":
