@@ -13,10 +13,12 @@ import { InfoCircle as AboutIcon } from "reicon-react";
 
 // League logos
 import premierLeagueLogo from "../../assets/sidebar/premier-league-logo.svg";
+import premierLeaguelogoAlt from "../../assets/sidebar/premier-league-logo-alt.svg";
 import laLigaLogo from "../../assets/sidebar/la-liga-logo.svg";
 import serieALogo from "../../assets/sidebar/serie-a-logo.svg";
 import bundesligaLogo from "../../assets/sidebar/bundesliga-logo.svg";
 import ligue1Logo from "../../assets/sidebar/ligue-1-logo.svg";
+import ligue1logoAlt from "../../assets/sidebar/ligue-1-logo-alt.svg";
 
 // League codes (same as the ones used in the API) for the leagues in the sidebar
 export type LeagueCode = "PL" | "PD" | "SA" | "BL1" | "FL1";
@@ -38,12 +40,32 @@ const PAGES: { path: string; name: string; icon: ComponentType<IconProps> }[] =
   ];
 
 // Sidebar leagues and their corresponding logos
-const LEAGUES: { code: LeagueCode; name: string; logo: string }[] = [
-  { code: "PL", name: "Premier League", logo: premierLeagueLogo },
-  { code: "PD", name: "La Liga", logo: laLigaLogo },
-  { code: "SA", name: "Serie A", logo: serieALogo },
-  { code: "BL1", name: "Bundesliga", logo: bundesligaLogo },
-  { code: "FL1", name: "Ligue 1", logo: ligue1Logo },
+export const LEAGUES: {
+  code: LeagueCode;
+  name: string;
+  logo: string;
+  logoAlt?: string;
+}[] = [
+  {
+    code: "PL",
+    name: "Premier League",
+    logo: premierLeagueLogo,
+    logoAlt: premierLeaguelogoAlt,
+  },
+  { code: "PD", name: "La Liga", logo: laLigaLogo, logoAlt: laLigaLogo },
+  { code: "SA", name: "Serie A", logo: serieALogo, logoAlt: serieALogo },
+  {
+    code: "BL1",
+    name: "Bundesliga",
+    logo: bundesligaLogo,
+    logoAlt: bundesligaLogo,
+  },
+  {
+    code: "FL1",
+    name: "Ligue 1",
+    logo: ligue1Logo,
+    logoAlt: ligue1logoAlt,
+  },
 ];
 
 // Props for the Sidebar component, including the selected league and a callback for selecting a league
