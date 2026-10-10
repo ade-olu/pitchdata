@@ -9,9 +9,6 @@ import { SEASON_STORIES } from "../../data/seasonStories"; // Hand-written stori
 // Base URL for the Express API
 const API_URL = "http://localhost:3001/api";
 
-// Season start year shown in the hero (2025 = 2025/26). The API only has one season for now.
-const SEASON_YEAR = 2025;
-
 // Formats a date like "16 Aug 2025"
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -22,6 +19,7 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 // Everything the hero needs, worked out from the standings and matches responses
 type HeroData = {
   league: LeagueCode;
+  season: number;
   champion: Standing;
   runnerUp: Standing | undefined;
   clubCount: number;
@@ -31,20 +29,26 @@ type HeroData = {
   endDate: Date;
 };
 
-// Props for the HeroBanner component, the league currently selected in the sidebar
+// Props for the HeroBanner component: the selected league and season start year (2025 = 2025/26)
 type HeroBannerProps = {
   league: LeagueCode;
+  season: number;
 };
 
-// Fetches standings + matches for a league and turns them into HeroData
+// Fetches standings + matches for a league's season and turns them into HeroData
 async function fetchHeroData(
   league: LeagueCode,
+  season: number,
   signal: AbortSignal,
 ): Promise<HeroData> {
   // Run both requests at the same time instead of one after the other
   const [standingsRes, matchesRes] = await Promise.all([
-    fetch(`${API_URL}/leagues/${league}/standings`, { signal }),
-    fetch(`${API_URL}/leagues/${league}/matches`, { signal }),
+    fetch(`${API_URL}/leagues/${league}/standings?season=${season}`, {
+      signal,
+    }),
+    fetch(`${API_URL}/leagues/${league}/matches?season=${season}`, {
+      signal,
+    }),
   ]);
 
   // Check if both responses were successful before proceeding
@@ -61,22 +65,30 @@ async function fetchHeroData(
     standings.find((club) => club.clubId === championClubId) ?? standings[0];
   const runnerUp = standings.find((club) => club.clubId !== champion.clubId);
 
-  // Only count matches that were actually played
-  const finished = matches.filter((match) => match.status === "FINISHED");
-  const goalsScored = finished.reduce(
-    (total, match) => total + (match.homeGoals ?? 0) + (match.awayGoals ?? 0),
-    0,
+  // AWARDED matches (result given without the game being played) count towards the league, so include them
+  const played = matches.filter(
+    (match) => match.status === "FINISHED" || match.status === "AWARDED",
   );
 
+  // Goals only come from matches that were actually played, since an awarded score isn't real goals
+  const goalsScored = played
+    .filter((match) => match.status === "FINISHED")
+    .reduce(
+      (total, match) =>
+        total + (match.homeGoals ?? 0) + (match.awayGoals ?? 0),
+      0,
+    );
+
   // Match order isn't chronological, so take the earliest and latest kickoff times
-  const times = finished.map((match) => new Date(match.utcDate).getTime());
+  const times = played.map((match) => new Date(match.utcDate).getTime());
 
   return {
     league,
+    season,
     champion,
     runnerUp,
     clubCount: standings.length,
-    matchesPlayed: finished.length,
+    matchesPlayed: played.length,
     goalsScored,
     startDate: new Date(Math.min(...times)),
     endDate: new Date(Math.max(...times)),
@@ -84,35 +96,37 @@ async function fetchHeroData(
 }
 
 // HeroBanner component that shows the season summary and champion over a stadium photo
-export default function HeroBanner({ league }: HeroBannerProps) {
+export default function HeroBanner({ league, season }: HeroBannerProps) {
   const [data, setData] = useState<HeroData | null>(null);
   const [error, setError] = useState<{
     league: LeagueCode;
+    season: number;
     message: string;
   } | null>(null);
 
-  // Refetch whenever the selected league changes
+  // Refetch whenever the selected league or season changes
   useEffect(() => {
-    // Cancels the request if the league changes before it finishes
+    // Cancels the request if the selection changes before it finishes
     const controller = new AbortController();
 
-    fetchHeroData(league, controller.signal)
+    fetchHeroData(league, season, controller.signal)
       .then((hero) => {
         setData(hero);
         setError(null);
       })
       .catch((err: Error) => {
         if (err.name !== "AbortError") {
-          setError({ league, message: err.message });
+          setError({ league, season, message: err.message });
         }
       });
 
     return () => controller.abort();
-  }, [league]);
+  }, [league, season]);
 
-  // Old data or errors from a previous league don't count for the current one
-  const hasError = error?.league === league;
-  const isLoading = !hasError && data?.league !== league;
+  // Old data or errors from a previous selection don't count for the current one
+  const hasError = error?.league === league && error.season === season;
+  const isLoading =
+    !hasError && (data?.league !== league || data.season !== season);
 
   // Error state
   if (hasError) {
@@ -135,8 +149,8 @@ export default function HeroBanner({ league }: HeroBannerProps) {
   }
 
   const { champion, runnerUp } = data; // Extract the champion and runner-up from the hero data
-  const photo = getHeroImage(champion.clubId, SEASON_YEAR); // Get the hero image for the champion's stadium
-  const story = SEASON_STORIES[`${league}-${SEASON_YEAR}`]; // Get the hand-written story for the current season, if available
+  const photo = getHeroImage(champion.clubId, season); // Get the hero image for the champion's stadium
+  const story = SEASON_STORIES[`${league}-${season}`]; // Get the hand-written story for the selected season, if available
 
   // Generic headline for seasons that don't have a hand-written story yet
   const pointsGap = runnerUp ? champion.points - runnerUp.points : 0;
