@@ -13,7 +13,9 @@ router.get("/:id", (req, res) => {
   const club = db
     .prepare(
       `
-    SELECT club_id, name, short_name, tla, crest_url
+    SELECT
+      club_id AS clubId, name, short_name AS shortName, tla,
+      crest_url AS crestUrl
     FROM clubs WHERE club_id = ?
   `,
     )
@@ -28,16 +30,23 @@ router.get("/:id", (req, res) => {
     .prepare(
       `
     SELECT
-      cs.season_id, l.name AS league_name, l.code AS league_code,
-      cs.games_played, cs.wins, cs.draws, cs.losses, cs.points,
-      cs.goals_for, cs.goals_against,
-      cs.home_points, cs.away_points,
-      cs.home_wins, cs.home_draws, cs.home_losses,
-      cs.away_wins, cs.away_draws, cs.away_losses,
-      cs.home_goals_for, cs.home_goals_against,
-      cs.away_goals_for, cs.away_goals_against,
-      cs.clean_sheets, cs.longest_win_streak, cs.longest_winless_streak,
-      cs.biggest_win_match_id, cs.biggest_loss_match_id
+      cs.season_id AS seasonId, l.name AS leagueName, l.code AS leagueCode,
+      cs.games_played AS gamesPlayed, cs.wins, cs.draws, cs.losses, cs.points,
+      cs.goals_for AS goalsFor, cs.goals_against AS goalsAgainst,
+      cs.home_points AS homePoints, cs.away_points AS awayPoints,
+      cs.home_wins AS homeWins, cs.home_draws AS homeDraws,
+      cs.home_losses AS homeLosses,
+      cs.away_wins AS awayWins, cs.away_draws AS awayDraws,
+      cs.away_losses AS awayLosses,
+      cs.home_goals_for AS homeGoalsFor,
+      cs.home_goals_against AS homeGoalsAgainst,
+      cs.away_goals_for AS awayGoalsFor,
+      cs.away_goals_against AS awayGoalsAgainst,
+      cs.clean_sheets AS cleanSheets,
+      cs.longest_win_streak AS longestWinStreak,
+      cs.longest_winless_streak AS longestWinlessStreak,
+      cs.biggest_win_match_id AS biggestWinMatchId,
+      cs.biggest_loss_match_id AS biggestLossMatchId
     FROM club_season_stats cs
     JOIN seasons s ON s.season_id = cs.season_id
     JOIN leagues l ON l.league_id = s.league_id
@@ -66,10 +75,10 @@ router.get("/:id/matches", (req, res) => {
     .prepare(
       `
     SELECT
-      m.match_id, m.matchday, m.utc_date, m.status,
-      m.home_goals, m.away_goals,
-      hc.name AS home_club_name, hc.club_id AS home_club_id,
-      ac.name AS away_club_name, ac.club_id AS away_club_id
+      m.match_id AS matchId, m.matchday, m.utc_date AS utcDate, m.status,
+      m.home_goals AS homeGoals, m.away_goals AS awayGoals,
+      hc.name AS homeClubName, hc.club_id AS homeClubId,
+      ac.name AS awayClubName, ac.club_id AS awayClubId
     FROM matches m
     JOIN clubs hc ON hc.club_id = m.home_club_id
     JOIN clubs ac ON ac.club_id = m.away_club_id

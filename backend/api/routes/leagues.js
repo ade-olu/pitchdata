@@ -11,7 +11,9 @@ function findSeason(code) {
   const row = db
     .prepare(
       `
-    SELECT s.season_id, s.champion_club_id, l.league_id, l.name, l.code
+    SELECT
+      s.season_id AS seasonId, s.champion_club_id AS championClubId,
+      l.league_id AS leagueId, l.name, l.code
     FROM seasons s
     JOIN leagues l ON l.league_id = s.league_id
     WHERE l.code = ?
@@ -24,7 +26,9 @@ function findSeason(code) {
 
 // Get all available leagues.
 router.get("/", (req, res) => {
-  const leagues = db.prepare("SELECT league_id, name, code FROM leagues").all();
+  const leagues = db
+    .prepare("SELECT league_id AS leagueId, name, code FROM leagues")
+    .all();
   res.json(leagues);
 });
 
@@ -42,21 +46,24 @@ router.get("/:code/standings", (req, res) => {
     .prepare(
       `
     SELECT
-      c.club_id, c.name, c.short_name, c.tla, c.crest_url,
-      cs.games_played, cs.wins, cs.draws, cs.losses, cs.points,
-      cs.goals_for, cs.goals_against,
-      cs.clean_sheets, cs.longest_win_streak, cs.longest_winless_streak
+      c.club_id AS clubId, c.name, c.short_name AS shortName, c.tla,
+      c.crest_url AS crestUrl,
+      cs.games_played AS gamesPlayed, cs.wins, cs.draws, cs.losses, cs.points,
+      cs.goals_for AS goalsFor, cs.goals_against AS goalsAgainst,
+      cs.clean_sheets AS cleanSheets,
+      cs.longest_win_streak AS longestWinStreak,
+      cs.longest_winless_streak AS longestWinlessStreak
     FROM club_season_stats cs
     JOIN clubs c ON c.club_id = cs.club_id
     WHERE cs.season_id = ?
     ORDER BY cs.points DESC, (cs.goals_for - cs.goals_against) DESC
   `,
     )
-    .all(season.season_id);
+    .all(season.seasonId);
 
   res.json({
     league: { code: season.code, name: season.name },
-    champion_club_id: season.champion_club_id,
+    championClubId: season.championClubId,
     standings,
   });
 });
@@ -73,17 +80,17 @@ router.get("/:code/matches", (req, res) => {
 
   let sql = `
     SELECT
-      m.match_id, m.matchday, m.utc_date, m.status,
-      m.home_goals, m.away_goals,
-      hc.name AS home_club_name, hc.club_id AS home_club_id,
-      ac.name AS away_club_name, ac.club_id AS away_club_id
+      m.match_id AS matchId, m.matchday, m.utc_date AS utcDate, m.status,
+      m.home_goals AS homeGoals, m.away_goals AS awayGoals,
+      hc.name AS homeClubName, hc.club_id AS homeClubId,
+      ac.name AS awayClubName, ac.club_id AS awayClubId
     FROM matches m
     JOIN clubs hc ON hc.club_id = m.home_club_id
     JOIN clubs ac ON ac.club_id = m.away_club_id
     WHERE m.season_id = ?
   `;
 
-  const params = [season.season_id];
+  const params = [season.seasonId];
 
   // Filter matches by matchday when provided.
   if (req.query.matchday) {
@@ -114,8 +121,8 @@ router.get("/:code/scorers", (req, res) => {
     .prepare(
       `
     SELECT
-      ps.player_name, ps.goals, ps.assists,
-      c.club_id, c.name AS club_name, c.crest_url
+      ps.player_name AS playerName, ps.goals, ps.assists,
+      c.club_id AS clubId, c.name AS clubName, c.crest_url AS crestUrl
     FROM player_season_stats ps
     JOIN clubs c ON c.club_id = ps.club_id
     WHERE ps.season_id = ?
@@ -123,7 +130,7 @@ router.get("/:code/scorers", (req, res) => {
     LIMIT ?
   `,
     )
-    .all(season.season_id, limit);
+    .all(season.seasonId, limit);
 
   res.json(scorers);
 });
