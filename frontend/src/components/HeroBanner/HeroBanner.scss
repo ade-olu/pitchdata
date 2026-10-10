@@ -1,0 +1,244 @@
+// HeroBanner styles using SCSS variables for colors
+$hero-bg: #0b0f0e;
+$hero-text: #ffffff;
+$hero-text-muted: rgba(255, 255, 255, 0.7);
+$hero-accent: #2fe6b8;
+$hero-glass-bg: rgba(22, 32, 31, 0.5);
+$hero-card-bg: rgba(22, 32, 31, 0.8);
+$hero-glass-border: rgba(124, 143, 140, 0.1);
+
+// HeroBanner component styles
+.hero-banner {
+  position: relative; // Anchors the background photo and credit
+  display: grid; // Lets __inner stretch to fill min-height
+  min-height: 356px; // Grows taller when the headline or summary wraps
+  overflow: hidden;
+  border-radius: 24px;
+  background: $hero-bg; // Shows while loading or when there's no photo
+  line-height: normal;
+  color: $hero-text;
+
+  // Loading and error states
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Error message styles
+  &__message {
+    font-size: 14px;
+    color: $hero-text-muted;
+  }
+
+  // Background photo styles (fills the banner, cropped to fit)
+  &__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  // Gradient overlay styles (darker on the left, behind the text).
+  // In normal flow so its content sets the banner height; a two-column grid
+  // keeps the text and champion card side by side without overlapping.
+  &__inner {
+    position: relative; // Paints above the absolutely positioned photo
+    isolation: isolate; // Keeps the z-index: -1 blur layer inside this box
+    display: grid;
+    grid-template-columns: minmax(0, 3.5fr) minmax(auto, 2fr);
+    column-gap: 32px;
+    padding: 48px;
+    background: linear-gradient(
+      to left,
+      rgba(11, 15, 14, 0.2),
+      rgba(11, 15, 14, 0.4) 50%,
+      rgba(11, 15, 14, 0.6)
+    );
+
+    // Progressive blur: a separate blur layer masked from opaque (left) to
+    // transparent (right), so the photo goes from blurred to sharp. It lives
+    // on a pseudo-element because masking __inner would also fade the text.
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1; // Behind the text and champion card
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      -webkit-mask-image: linear-gradient(
+        to right,
+        rgba(11, 15, 14) 55%,
+        transparent 65%
+      );
+      mask-image: linear-gradient(
+        to right,
+        rgba(11, 15, 14) 55%,
+        transparent 65%
+      );
+      pointer-events: none;
+    }
+  }
+
+  // Content column styles
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  // Season date range pill styles
+  &__pill {
+    padding: 8px 16px;
+    border: 1px solid $hero-glass-border;
+    border-radius: 999px;
+    background: $hero-glass-bg;
+    backdrop-filter: blur(8px);
+    font-size: 14px;
+    font-weight: 500;
+    color: $hero-text-muted;
+    white-space: nowrap;
+  }
+
+  // Headline and summary wrapper styles
+  &__headline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  // Headline styles
+  &__title {
+    padding-right: 32px;
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: normal;
+  }
+
+  // Summary styles
+  &__summary {
+    font-size: 16px;
+    line-height: 24px;
+    color: $hero-text-muted;
+  }
+
+  // Metrics list styles
+  &__metrics {
+    display: flex;
+    gap: 32px;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  // Single metric styles (column-reverse puts the value above the label)
+  &__metric {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  // Metric label styles
+  &__metric-label {
+    font-size: 14px;
+    color: $hero-text-muted;
+  }
+
+  // Metric value styles
+  &__metric-value {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  // Champion card styles (right grid column, pinned to the bottom-right)
+  &__champion {
+    align-self: end;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 16px 24px;
+    border: 1px solid $hero-glass-border;
+    border-radius: 12px;
+    background: $hero-card-bg;
+    backdrop-filter: blur(8px);
+  }
+
+  // Champion crest + name wrapper styles
+  &__champion-club {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  // Champion crest styles
+  &__champion-crest {
+    width: auto;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  // Champion label + name wrapper styles
+  &__champion-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  // "Champions" label styles
+  &__champion-label {
+    font-size: 14px;
+    color: $hero-text-muted;
+  }
+
+  // Champion name styles (long names get cut off with "...")
+  &__champion-name {
+    max-width: 160px;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  // Points wrapper styles
+  &__points {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+  }
+
+  // Points value styles
+  &__points-value {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: $hero-accent;
+  }
+
+  // "Pts" unit styles
+  &__points-unit {
+    font-size: 14px;
+    color: $hero-text-muted;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  // Photo credit styles
+  &__credit {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    font-size: 12px;
+    color: $hero-text-muted;
+  }
+}
