@@ -6,41 +6,86 @@ const db = require("../db");
 
 const router = express.Router();
 
-// Find a league and its current season by league code.
-function findSeason(code) {
+// Find a league's season by league code and start year (2025 = 2025/26).
+// Without a start year, returns the league's latest season.
+function findSeason(code, startYear) {
   const row = db
     .prepare(
       `
     SELECT
-      s.season_id AS seasonId, s.champion_club_id AS championClubId,
+      s.season_id AS seasonId, s.start_year AS startYear, s.label,
+      s.champion_club_id AS championClubId,
       l.league_id AS leagueId, l.name, l.code
     FROM seasons s
     JOIN leagues l ON l.league_id = s.league_id
-    WHERE l.code = ?
+    WHERE l.code = ? AND (? IS NULL OR s.start_year = ?)
+    ORDER BY s.start_year DESC
+    LIMIT 1
   `,
     )
-    .get(code.toUpperCase());
+    .get(code.toUpperCase(), startYear, startYear);
 
   return row;
 }
 
-// Get all available leagues.
+// Find the season for a request's :code and optional ?season=, or send a 400/404 and return null.
+function resolveSeason(req, res) {
+  const { code } = req.params;
+  const { season } = req.query;
+
+  if (season !== undefined && !/^\d{4}$/.test(season)) {
+    res
+      .status(400)
+      .json({ error: `season must be a start year like 2025, got "${season}"` });
+    return null;
+  }
+
+  const startYear = season === undefined ? null : Number(season);
+  const row = findSeason(code, startYear);
+
+  if (!row) {
+    res.status(404).json({
+      error:
+        startYear === null
+          ? `No league found with code "${code}"`
+          : `No ${startYear} season found for league "${code}"`,
+    });
+    return null;
+  }
+
+  return row;
+}
+
+// Get all available leagues, each with its seasons (newest first).
 router.get("/", (req, res) => {
   const leagues = db
     .prepare("SELECT league_id AS leagueId, name, code FROM leagues")
     .all();
-  res.json(leagues);
+
+  const seasons = db
+    .prepare(
+      `
+    SELECT league_id AS leagueId, start_year AS startYear, label
+    FROM seasons
+    ORDER BY start_year DESC
+  `,
+    )
+    .all();
+
+  res.json(
+    leagues.map((league) => ({
+      ...league,
+      seasons: seasons
+        .filter((season) => season.leagueId === league.leagueId)
+        .map(({ startYear, label }) => ({ startYear, label })),
+    })),
+  );
 });
 
 // Get the standings for a league.
 router.get("/:code/standings", (req, res) => {
-  const season = findSeason(req.params.code);
-
-  if (!season) {
-    return res
-      .status(404)
-      .json({ error: `No league found with code "${req.params.code}"` });
-  }
+  const season = resolveSeason(req, res);
+  if (!season) return;
 
   const standings = db
     .prepare(
@@ -63,6 +108,7 @@ router.get("/:code/standings", (req, res) => {
 
   res.json({
     league: { code: season.code, name: season.name },
+    season: { startYear: season.startYear, label: season.label },
     championClubId: season.championClubId,
     standings,
   });
@@ -70,13 +116,8 @@ router.get("/:code/standings", (req, res) => {
 
 // Get all matches for a league.
 router.get("/:code/matches", (req, res) => {
-  const season = findSeason(req.params.code);
-
-  if (!season) {
-    return res
-      .status(404)
-      .json({ error: `No league found with code "${req.params.code}"` });
-  }
+  const season = resolveSeason(req, res);
+  if (!season) return;
 
   let sql = `
     SELECT
@@ -106,13 +147,8 @@ router.get("/:code/matches", (req, res) => {
 
 // Get the top scorers for a league.
 router.get("/:code/scorers", (req, res) => {
-  const season = findSeason(req.params.code);
-
-  if (!season) {
-    return res
-      .status(404)
-      .json({ error: `No league found with code "${req.params.code}"` });
-  }
+  const season = resolveSeason(req, res);
+  if (!season) return;
 
   // Limit the number of scorers returned.
   const limit = Number(req.query.limit) || 20;
