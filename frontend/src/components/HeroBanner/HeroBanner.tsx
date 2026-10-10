@@ -74,8 +74,7 @@ async function fetchHeroData(
   const goalsScored = played
     .filter((match) => match.status === "FINISHED")
     .reduce(
-      (total, match) =>
-        total + (match.homeGoals ?? 0) + (match.awayGoals ?? 0),
+      (total, match) => total + (match.homeGoals ?? 0) + (match.awayGoals ?? 0),
       0,
     );
 
