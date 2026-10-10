@@ -14,10 +14,10 @@ type HeroImage = HeroPhoto & {
 };
 
 // Champion club photos. Add a new entry the first time a club wins a league.
-// 57 Arsenal, 81 Barcelona, 108 Inter, 5 Bayern, 524 PSG
+// Name files after the club in kebab case (e.g. bayern-munich.webp).
 export const HERO_IMAGES: Record<number, HeroImage> = {
   // TODO: add more champion club photos as needed
-  57: { src: "/hero/57.webp", credit: "", position: "center" },
+  57: { src: "/hero/arsenal.webp", credit: "", position: "center" },
 };
 
 // Used when a champion has no photo yet
