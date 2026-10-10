@@ -1,5 +1,19 @@
 // Types for the JSON returned by the Express API (backend/api)
 
+// A season, identified by its start year (2025 = 2025/26). Pass startYear as ?season= to league and club routes.
+export type Season = {
+  startYear: number;
+  label: string; // e.g. "2025/26"
+};
+
+// One league in GET /api/leagues
+export type League = {
+  leagueId: number;
+  name: string;
+  code: string;
+  seasons: Season[]; // Newest first
+};
+
 // One club's row in GET /api/leagues/:code/standings
 export type Standing = {
   clubId: number;
@@ -22,6 +36,7 @@ export type Standing = {
 // Full response from GET /api/leagues/:code/standings
 export type StandingsResponse = {
   league: { code: string; name: string };
+  season: Season;
   championClubId: number | null;
   standings: Standing[];
 };
