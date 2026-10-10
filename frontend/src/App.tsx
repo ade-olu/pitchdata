@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./styles/App.scss";
 import Sidebar, { type LeagueCode } from "./components/Sidebar/Sidebar";
+import HeroBanner from "./components/HeroBanner/HeroBanner";
 
 function App() {
   const [league, setLeague] = useState<LeagueCode>("PL");
@@ -8,7 +9,9 @@ function App() {
   return (
     <div className="app">
       <Sidebar selectedLeague={league} onSelectLeague={setLeague} />
-      <main className="app__main"></main>
+      <main className="app__main">
+        <HeroBanner league={league} />
+      </main>
     </div>
   );
 }
