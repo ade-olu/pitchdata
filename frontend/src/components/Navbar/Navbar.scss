@@ -1,0 +1,148 @@
+// Navbar color variables
+$navbar-bg: #eff4f3;
+$navbar-inner-bg: #ffffff;
+$navbar-border: #dadbdb;
+$navbar-text: #0b0f0e;
+$navbar-text-muted: #7d8180;
+$navbar-accent: #2fe6b8; // Same accent as the sidebar
+$navbar-shadow: 0 1px 0 0 rgba(11, 15, 14, 0.25);
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 5.5rem;
+  background-color: $navbar-bg;
+  border-bottom: 1px solid $navbar-border;
+  padding: 2rem;
+
+  &__league {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__league-logo {
+    height: 1.75rem;
+    width: auto;
+    object-fit: contain;
+  }
+
+  &__league-name {
+    margin: 0;
+    font-weight: 600;
+    color: $navbar-text;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  // Positions the option list under the button
+  &__dropdown-wrapper {
+    position: relative;
+  }
+
+  &__dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 15rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: $navbar-text;
+    border-radius: 12px;
+    border: 1px solid $navbar-border;
+    background-color: $navbar-inner-bg;
+    padding: 0.5rem 1rem;
+    transition: border-color 0.15s;
+
+    &:hover,
+    &--open {
+      border-color: $navbar-text-muted;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $navbar-accent;
+      outline-offset: 2px;
+    }
+
+    // Flip the chevron while the list is open
+    &--open .navbar__dropdown-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__dropdown-season {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  &__dropdown-label {
+    font-size: 0.75rem;
+    color: $navbar-text-muted;
+  }
+
+  &__dropdown-value {
+    font-size: 0.875rem;
+    color: $navbar-text;
+    font-weight: 500;
+  }
+
+  &__dropdown-icon {
+    width: auto;
+    height: 1.125rem;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  // Option list that opens under the button
+  &__dropdown-list {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 10;
+    width: 100%;
+    margin: 0;
+    padding: 0.375rem;
+    list-style: none;
+    border-radius: 12px;
+    border: 1px solid $navbar-border;
+    background-color: $navbar-inner-bg;
+    box-shadow: $navbar-shadow;
+
+    // Focus sits on the list itself; the highlighted option shows where you are
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  &__dropdown-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $navbar-text-muted;
+    cursor: pointer;
+
+    // Highlighted by hover or arrow keys
+    &--active {
+      background-color: $navbar-bg;
+      color: $navbar-text;
+    }
+
+    &--selected {
+      color: $navbar-text;
+    }
+  }
+
+  &__dropdown-check {
+    width: auto;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+}
