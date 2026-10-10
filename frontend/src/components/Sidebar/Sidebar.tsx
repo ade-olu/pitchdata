@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import type { ComponentType } from "react";
 import "./Sidebar.scss";
 
@@ -82,7 +82,9 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar__header">
-        <img className="sidebar__logo" src={logoIcon} alt="PitchData Logo" />
+        <Link to="/" className="sidebar__logo-link" aria-label="PitchData home">
+          <img className="sidebar__logo" src={logoIcon} alt="" />
+        </Link>
       </div>
       {/* Navigation */}
       <nav className="sidebar__nav">
