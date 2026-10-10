@@ -1,3 +1,5 @@
+@use "../../styles/functions" as *;
+
 // HeroBanner styles using SCSS variables for colors
 $hero-bg: #0b0f0e;
 $hero-text: #ffffff;
@@ -11,7 +13,7 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
 .hero-banner {
   position: relative; // Anchors the background photo and credit
   display: grid; // Lets __inner stretch to fill min-height
-  min-height: 356px; // Grows taller when the headline or summary wraps
+  min-height: rem(356); // Grows taller when the headline or summary wraps
   overflow: hidden;
   border-radius: 24px;
   background: $hero-bg; // Shows while loading or when there's no photo
@@ -27,7 +29,7 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
 
   // Error message styles
   &__message {
-    font-size: 14px;
+    font-size: rem(14);
     color: $hero-text-muted;
   }
 
@@ -50,8 +52,8 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
     isolation: isolate; // Keeps the z-index: -1 blur layer inside this box
     display: grid;
     grid-template-columns: minmax(0, 3.5fr) minmax(auto, 2fr);
-    column-gap: 32px;
-    padding: 48px;
+    column-gap: rem(32);
+    padding: rem(48);
     background: linear-gradient(
       to left,
       rgba(11, 15, 14, 0.2),
@@ -89,17 +91,17 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 32px;
+    gap: rem(32);
   }
 
   // Season date range pill styles
   &__pill {
-    padding: 8px 16px;
+    padding: rem(8) rem(16);
     border: 1px solid $hero-glass-border;
     border-radius: 999px;
     background: $hero-glass-bg;
     backdrop-filter: blur(8px);
-    font-size: 14px;
+    font-size: rem(14);
     font-weight: 500;
     color: $hero-text-muted;
     white-space: nowrap;
@@ -109,13 +111,13 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   &__headline {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: rem(16);
   }
 
   // Headline styles
   &__title {
-    padding-right: 32px;
-    font-size: 48px;
+    padding-right: rem(32);
+    font-size: rem(48);
     font-weight: 600;
     letter-spacing: -0.5px;
     line-height: normal;
@@ -123,15 +125,15 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
 
   // Summary styles
   &__summary {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: rem(16);
+    line-height: 1.5;
     color: $hero-text-muted;
   }
 
   // Metrics list styles
   &__metrics {
     display: flex;
-    gap: 32px;
+    gap: rem(32);
     margin: 0;
     white-space: nowrap;
   }
@@ -140,19 +142,19 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   &__metric {
     display: flex;
     flex-direction: column-reverse;
-    gap: 8px;
+    gap: rem(8);
   }
 
   // Metric label styles
   &__metric-label {
-    font-size: 14px;
+    font-size: rem(14);
     color: $hero-text-muted;
   }
 
   // Metric value styles
   &__metric-value {
     margin: 0;
-    font-size: 24px;
+    font-size: rem(24);
     font-weight: 600;
     letter-spacing: -0.5px;
   }
@@ -163,8 +165,8 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
     justify-self: end;
     display: flex;
     align-items: center;
-    gap: 32px;
-    padding: 16px 24px;
+    gap: rem(32);
+    padding: rem(16) rem(24);
     border: 1px solid $hero-glass-border;
     border-radius: 12px;
     background: $hero-card-bg;
@@ -175,13 +177,13 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   &__champion-club {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: rem(16);
   }
 
   // Champion crest styles
   &__champion-crest {
     width: auto;
-    height: 40px;
+    height: rem(40);
     flex-shrink: 0;
   }
 
@@ -189,21 +191,21 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   &__champion-text {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: rem(4);
     min-width: 0;
   }
 
   // "Champions" label styles
   &__champion-label {
-    font-size: 14px;
+    font-size: rem(14);
     color: $hero-text-muted;
   }
 
   // Champion name styles (long names get cut off with "...")
   &__champion-name {
-    max-width: 160px;
+    max-width: rem(160);
     overflow: hidden;
-    font-size: 16px;
+    font-size: rem(16);
     font-weight: 600;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -213,13 +215,13 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   &__points {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: rem(12);
     white-space: nowrap;
   }
 
   // Points value styles
   &__points-value {
-    font-size: 24px;
+    font-size: rem(24);
     font-weight: 600;
     letter-spacing: -0.5px;
     color: $hero-accent;
@@ -227,7 +229,7 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
 
   // "Pts" unit styles
   &__points-unit {
-    font-size: 14px;
+    font-size: rem(14);
     color: $hero-text-muted;
     text-decoration: none;
     text-transform: uppercase;
@@ -236,9 +238,9 @@ $hero-glass-border: rgba(124, 143, 140, 0.1);
   // Photo credit styles
   &__credit {
     position: absolute;
-    top: 16px;
-    right: 24px;
-    font-size: 12px;
+    top: rem(16);
+    right: rem(24);
+    font-size: rem(12);
     color: $hero-text-muted;
   }
 }

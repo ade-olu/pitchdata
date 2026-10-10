@@ -1,3 +1,5 @@
+@use "../../styles/functions" as *;
+
 // Sidebar styles using SCSS variables for colors
 $sidebar-bg: #0b0f0e;
 $sidebar-border: #2a3c3b;
@@ -11,7 +13,7 @@ $sidebar-accent: #2fe6b8;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 256px;
+  width: rem(256);
   height: 100vh;
   position: sticky;
   top: 0;
@@ -30,14 +32,14 @@ $sidebar-accent: #2fe6b8;
   // Sidebar header styles
   &__header {
     flex-shrink: 0;
-    height: 5.5rem;
-    padding: 32px 24px;
+    height: rem(88);
+    padding: rem(32) rem(24);
     border-bottom: 1px solid $sidebar-border;
   }
 
   // Sidebar logo styles
   &__logo {
-    height: 24px;
+    height: rem(24);
     flex-shrink: 0;
   }
 
@@ -45,16 +47,16 @@ $sidebar-accent: #2fe6b8;
   &__nav {
     display: flex;
     flex-direction: column;
-    gap: 32px;
-    margin: 32px 0;
-    padding: 0 24px;
+    gap: rem(32);
+    margin: rem(32) 0;
+    padding: 0 rem(24);
   }
 
   // Sidebar section styles
   &__section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: rem(12);
   }
 
   // Sidebar navigation list styles
@@ -64,20 +66,20 @@ $sidebar-accent: #2fe6b8;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: rem(8);
   }
 
   // Sidebar navigation item styles
   &__nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: rem(12);
     width: 100%;
-    padding: 16px 24px;
+    padding: rem(16) rem(24);
     border-radius: 12px;
     border: 0;
     background: transparent;
-    font-size: 14px;
+    font-size: rem(14);
     font-weight: 500;
     line-height: normal;
     color: $sidebar-text-muted;
@@ -115,16 +117,16 @@ $sidebar-accent: #2fe6b8;
   // Sidebar navigation icon styles
   &__nav-icon {
     width: auto;
-    height: 18px;
+    height: rem(18);
     flex-shrink: 0;
   }
 
   // Sidebar section title styles
   &__section-title {
-    font-size: 14px;
+    font-size: rem(14);
     font-weight: 500;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    margin-left: 24px;
+    margin-left: rem(24);
   }
 }
