@@ -6,9 +6,28 @@ const db = require("../db");
 
 const router = express.Router();
 
-// Get a club's profile and season stats.
+// Read the optional ?season= start year, or send a 400 and return undefined if it's malformed.
+// Returns null when no season was asked for.
+function parseSeason(req, res) {
+  const { season } = req.query;
+
+  if (season === undefined) return null;
+
+  if (!/^\d{4}$/.test(season)) {
+    res
+      .status(400)
+      .json({ error: `season must be a start year like 2025, got "${season}"` });
+    return undefined;
+  }
+
+  return Number(season);
+}
+
+// Get a club's profile and stats for one season (?season=, defaults to its latest).
 router.get("/:id", (req, res) => {
   const clubId = Number(req.params.id);
+  const startYear = parseSeason(req, res);
+  if (startYear === undefined) return;
 
   const club = db
     .prepare(
@@ -25,12 +44,13 @@ router.get("/:id", (req, res) => {
     return res.status(404).json({ error: `No club found with id ${clubId}` });
   }
 
-  // Get the club's stats for its current season.
+  // Get the club's stats for the requested season, or its latest one. Null if it didn't play that season.
   const stats = db
     .prepare(
       `
     SELECT
-      cs.season_id AS seasonId, l.name AS leagueName, l.code AS leagueCode,
+      cs.season_id AS seasonId, s.start_year AS startYear,
+      s.label AS seasonLabel, l.name AS leagueName, l.code AS leagueCode,
       cs.games_played AS gamesPlayed, cs.wins, cs.draws, cs.losses, cs.points,
       cs.goals_for AS goalsFor, cs.goals_against AS goalsAgainst,
       cs.home_points AS homePoints, cs.away_points AS awayPoints,
@@ -50,17 +70,21 @@ router.get("/:id", (req, res) => {
     FROM club_season_stats cs
     JOIN seasons s ON s.season_id = cs.season_id
     JOIN leagues l ON l.league_id = s.league_id
-    WHERE cs.club_id = ?
+    WHERE cs.club_id = ? AND (? IS NULL OR s.start_year = ?)
+    ORDER BY s.start_year DESC
+    LIMIT 1
   `,
     )
-    .get(clubId);
+    .get(clubId, startYear, startYear);
 
-  res.json({ club, stats });
+  res.json({ club, stats: stats ?? null });
 });
 
-// Get all matches played by a club.
+// Get the matches played by a club, optionally for one season (?season=).
 router.get("/:id/matches", (req, res) => {
   const clubId = Number(req.params.id);
+  const startYear = parseSeason(req, res);
+  if (startYear === undefined) return;
 
   const club = db
     .prepare("SELECT club_id FROM clubs WHERE club_id = ?")
@@ -80,13 +104,15 @@ router.get("/:id/matches", (req, res) => {
       hc.name AS homeClubName, hc.club_id AS homeClubId,
       ac.name AS awayClubName, ac.club_id AS awayClubId
     FROM matches m
+    JOIN seasons s ON s.season_id = m.season_id
     JOIN clubs hc ON hc.club_id = m.home_club_id
     JOIN clubs ac ON ac.club_id = m.away_club_id
-    WHERE m.home_club_id = ? OR m.away_club_id = ?
+    WHERE (m.home_club_id = ? OR m.away_club_id = ?)
+      AND (? IS NULL OR s.start_year = ?)
     ORDER BY m.utc_date DESC
   `,
     )
-    .all(clubId, clubId);
+    .all(clubId, clubId, startYear, startYear);
 
   res.json(matches);
 });
