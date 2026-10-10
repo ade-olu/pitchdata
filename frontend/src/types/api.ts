@@ -54,3 +54,13 @@ export type Match = {
   awayClubName: string;
   awayClubId: number;
 };
+
+// One player in GET /api/leagues/:code/scorers (top scorers only, ordered by goals)
+export type Scorer = {
+  playerName: string;
+  goals: number;
+  assists: number | null;
+  clubId: number;
+  clubName: string;
+  crestUrl: string;
+};
