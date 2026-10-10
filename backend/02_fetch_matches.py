@@ -1,10 +1,10 @@
 """
 02_fetch_matches.py
 
-Fetches all matches for the 2025/26 season across 5 leagues (Premier
-League, La Liga, Serie A, Bundesliga, Ligue 1) from football-data.org
-and loads them into the database, along with their leagues, seasons,
-and clubs.
+Fetches all matches for every season in SEASONS (2023/24 to 2025/26)
+across 5 leagues (Premier League, La Liga, Serie A, Bundesliga,
+Ligue 1) from football-data.org and loads them into the database,
+along with their leagues, seasons, and clubs.
 
 Safe to re-run: every insert uses INSERT OR IGNORE, so existing rows
 are left alone instead of erroring or duplicating.
@@ -18,8 +18,9 @@ import requests  # Not in the standard library - install via requirements.txt
 DB_FILE = "football.db"
 API_KEY_FILE = "api_key.txt"
 
-SEASON_START_YEAR = 2025  # The API refers to the 2025/26 season as "2025"
-SEASON_LABEL = "2025/26"
+# Season start years to fetch. The API refers to the 2025/26 season as "2025".
+# The free tier only allows the current season and the few before it, so older years return 403.
+SEASONS = [2023, 2024, 2025]
 
 # football-data.org's own ids and codes for each league, so they line up directly with what the API sends back
 LEAGUES = [
@@ -30,8 +31,8 @@ LEAGUES = [
     {"id": 2015, "name": "Ligue 1",         "code": "FL1"},
 ]
 
-# Small pause between leagues to stay comfortably under the API's rate limit
-SECONDS_BETWEEN_LEAGUES = 3
+# Pause between requests to stay under the free tier's 10 calls/minute
+SECONDS_BETWEEN_REQUESTS = 7
 
 
 def load_api_key():
@@ -40,9 +41,14 @@ def load_api_key():
         return f.read().strip()
 
 
-def fetch_matches(api_key, league_code):
+def season_label(start_year):
+    # 2025 -> "2025/26"
+    return f"{start_year}/{str(start_year + 1)[-2:]}"
+
+
+def fetch_matches(api_key, league_code, start_year):
     headers = {"X-Auth-Token": api_key}
-    params = {"season": SEASON_START_YEAR}
+    params = {"season": start_year}
 
     url = f"https://api.football-data.org/v4/competitions/{league_code}/matches"
     response = requests.get(url, headers=headers, params=params)
@@ -76,11 +82,11 @@ def ensure_league(cursor, league_id, league_name, league_code):
     )
 
 
-def ensure_season(cursor, league_id):
+def ensure_season(cursor, league_id, start_year):
     # season_id is auto-generated, so we check for an existing row first instead of using INSERT OR IGNORE
     cursor.execute(
         "SELECT season_id FROM seasons WHERE league_id = ? AND start_year = ?",
-        (league_id, SEASON_START_YEAR),
+        (league_id, start_year),
     )
     row = cursor.fetchone()
 
@@ -89,7 +95,7 @@ def ensure_season(cursor, league_id):
 
     cursor.execute(
         "INSERT INTO seasons (league_id, start_year, label) VALUES (?, ?, ?)",
-        (league_id, SEASON_START_YEAR, SEASON_LABEL),
+        (league_id, start_year, season_label(start_year)),
     )
     return cursor.lastrowid
 
@@ -153,13 +159,19 @@ def main():
     connection = sqlite3.connect(DB_FILE)
     cursor = connection.cursor()
 
-    for i, league in enumerate(LEAGUES, start=1):
-        print(f"\n[{i}/{len(LEAGUES)}] {league['name']} ({league['code']})")
+    # Seasons in the outer loop so season_ids come out in year order (all 2023 rows, then 2024, ...)
+    jobs = [(year, league) for year in SEASONS for league in LEAGUES]
 
-        matches = fetch_matches(api_key, league["code"])
+    for i, (year, league) in enumerate(jobs, start=1):
+        print(
+            f"\n[{i}/{len(jobs)}] {league['name']} ({league['code']}) "
+            f"{season_label(year)}"
+        )
+
+        matches = fetch_matches(api_key, league["code"], year)
 
         ensure_league(cursor, league["id"], league["name"], league["code"])
-        season_id = ensure_season(cursor, league["id"])
+        season_id = ensure_season(cursor, league["id"], year)
         ensure_clubs(cursor, matches)
         insert_matches(cursor, matches, season_id)
 
@@ -168,12 +180,15 @@ def main():
 
         print(f"  season_id = {season_id}")
 
-        if i < len(LEAGUES):
-            time.sleep(SECONDS_BETWEEN_LEAGUES)
+        if i < len(jobs):
+            time.sleep(SECONDS_BETWEEN_REQUESTS)
 
     connection.close()
 
-    print(f"\nDone. Fetched and inserted {len(LEAGUES)} leagues.")
+    print(
+        f"\nDone. Fetched and inserted {len(LEAGUES)} leagues "
+        f"x {len(SEASONS)} seasons."
+    )
 
 
 if __name__ == "__main__":
