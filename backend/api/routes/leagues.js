@@ -171,4 +171,92 @@ router.get("/:code/scorers", (req, res) => {
   res.json(scorers);
 });
 
+// Columns /players can be sorted by, with tie-breakers. Whitelisted so ?sort= never goes into SQL directly.
+const PLAYER_SORTS = {
+  goals: "ps.goals DESC, ps.xg DESC",
+  assists: "ps.assists DESC, ps.xa DESC",
+  xg: "ps.xg DESC, ps.goals DESC",
+  xa: "ps.xa DESC, ps.assists DESC",
+  minutes: "ps.minutes DESC",
+};
+
+// Get every player's stats for a league from Understat, plus league-wide totals.
+// ?sort= one of PLAYER_SORTS (default goals), ?limit= how many players (default 20, 0 for totals only).
+router.get("/:code/players", (req, res) => {
+  const season = resolveSeason(req, res);
+  if (!season) return;
+
+  const sort = req.query.sort ?? "goals";
+  if (!PLAYER_SORTS[sort]) {
+    res.status(400).json({
+      error: `sort must be one of ${Object.keys(PLAYER_SORTS).join(", ")}, got "${sort}"`,
+    });
+    return;
+  }
+
+  const limit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(limit) || limit < 0) {
+    res
+      .status(400)
+      .json({ error: `limit must be a whole number, got "${req.query.limit}"` });
+    return;
+  }
+
+  // Totals cover every player in the league, not just the ones returned below.
+  const totals = db
+    .prepare(
+      `
+    SELECT
+      COUNT(*) AS players,
+      COALESCE(SUM(goals), 0) AS goals, COALESCE(SUM(assists), 0) AS assists,
+      COALESCE(SUM(xg), 0) AS xG, COALESCE(SUM(xa), 0) AS xA
+    FROM understat_player_stats
+    WHERE season_id = ?
+  `,
+    )
+    .get(season.seasonId);
+
+  const players = db
+    .prepare(
+      `
+    SELECT
+      ps.id, ps.understat_player_id AS understatId,
+      ps.player_name AS playerName, ps.position,
+      ps.games, ps.minutes, ps.goals, ps.assists,
+      ps.xg AS xG, ps.xa AS xA, ps.shots, ps.key_passes AS keyPasses
+    FROM understat_player_stats ps
+    WHERE ps.season_id = ?
+    ORDER BY ${PLAYER_SORTS[sort]}, ps.player_name
+    LIMIT ?
+  `,
+    )
+    .all(season.seasonId, limit);
+
+  // Clubs for the players above (two or more for a mid-season transfer).
+  const clubs = db
+    .prepare(
+      `
+    SELECT
+      pc.player_stats_id AS playerStatsId,
+      c.club_id AS clubId, c.name, c.short_name AS shortName,
+      c.crest_url AS crestUrl
+    FROM understat_player_clubs pc
+    JOIN clubs c ON c.club_id = pc.club_id
+    JOIN understat_player_stats ps ON ps.id = pc.player_stats_id
+    WHERE ps.season_id = ?
+  `,
+    )
+    .all(season.seasonId);
+
+  res.json({
+    totals,
+    players: players.map(({ id, ...player }) => ({
+      ...player,
+      clubs: clubs
+        .filter((club) => club.playerStatsId === id)
+        .map(({ playerStatsId, ...club }) => club),
+    })),
+  });
+});
+
 module.exports = router;
