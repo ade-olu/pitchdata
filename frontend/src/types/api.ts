@@ -55,12 +55,38 @@ export type Match = {
   awayClubId: number;
 };
 
-// One player in GET /api/leagues/:code/scorers (top scorers only, ordered by goals)
-export type Scorer = {
-  playerName: string;
-  goals: number;
-  assists: number | null;
+// A club a player played for, inside Player.clubs
+export type PlayerClub = {
   clubId: number;
-  clubName: string;
+  name: string;
+  shortName: string;
   crestUrl: string;
+};
+
+// One player in GET /api/leagues/:code/players (stats from Understat, every player in the league)
+export type Player = {
+  understatId: number;
+  playerName: string;
+  position: string; // Understat's position codes, e.g. "F S"
+  games: number;
+  minutes: number;
+  goals: number; // Doesn't include own goals
+  assists: number;
+  xG: number;
+  xA: number;
+  shots: number;
+  keyPasses: number;
+  clubs: PlayerClub[]; // Two or more for a mid-season transfer within the league
+};
+
+// Full response from GET /api/leagues/:code/players
+export type PlayersResponse = {
+  totals: {
+    players: number;
+    goals: number;
+    assists: number;
+    xG: number;
+    xA: number;
+  }; // Covers every player in the league, whatever ?limit= is
+  players: Player[];
 };
