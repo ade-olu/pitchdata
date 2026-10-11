@@ -7,8 +7,9 @@
 -- this file just builds empty tables, ready to be filled in
 -- by the Python scripts.
 --
--- 6 tables total: leagues, seasons, clubs, matches,
--- player_season_stats, club_season_stats
+-- 8 tables total: leagues, seasons, clubs, matches,
+-- player_season_stats, club_season_stats,
+-- understat_player_stats, understat_player_clubs
 -- ============================================================
 
 -- PRAGMA = a SQLite-specific settings command (not standard SQL).
@@ -181,3 +182,62 @@ CREATE TABLE club_season_stats (
 );
 
 CREATE INDEX idx_club_season_stats_season ON club_season_stats(season_id);
+
+
+-- ------------------------------------------------------------
+-- TABLE: understat_player_stats
+-- One row per player PER SEASON, for EVERY player who played in
+-- the league (not just the top 100 scorers like
+-- player_season_stats). Filled in by 06_fetch_understat.py from
+-- understat.com, which also gives minutes, xG and xA.
+--
+-- A player who moved clubs mid-season gets ONE row with their
+-- combined totals - Understat doesn't split them per club. Which
+-- clubs they played for lives in understat_player_clubs below.
+-- ------------------------------------------------------------
+CREATE TABLE understat_player_stats (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    season_id            INTEGER NOT NULL,
+    understat_player_id  INTEGER NOT NULL,   -- Understat's own player id, the same across seasons
+    player_name          TEXT NOT NULL,
+    position             TEXT,               -- Understat's position codes, e.g. "F S" or "D M"
+    games                INTEGER,
+    minutes              INTEGER,
+    goals                INTEGER,            -- doesn't include own goals, so this sums to a bit less than the matches table
+    non_penalty_goals    INTEGER,
+    assists              INTEGER,
+    shots                INTEGER,
+    key_passes           INTEGER,
+    yellow_cards         INTEGER,
+    red_cards            INTEGER,
+    xg                   REAL,               -- expected goals
+    npxg                 REAL,               -- non-penalty expected goals
+    xa                   REAL,               -- expected assists
+    xg_chain             REAL,
+    xg_buildup           REAL,
+
+    FOREIGN KEY (season_id) REFERENCES seasons(season_id),
+
+    UNIQUE (season_id, understat_player_id)   -- one row per player per season
+);
+
+CREATE INDEX idx_understat_player_stats_season ON understat_player_stats(season_id);
+
+
+-- ------------------------------------------------------------
+-- TABLE: understat_player_clubs
+-- Links each understat_player_stats row to the club(s) the player
+-- played for that season. Usually one row, two or more for a
+-- mid-season transfer within the same league.
+-- ------------------------------------------------------------
+CREATE TABLE understat_player_clubs (
+    player_stats_id  INTEGER NOT NULL,
+    club_id          INTEGER NOT NULL,
+
+    FOREIGN KEY (player_stats_id) REFERENCES understat_player_stats(id) ON DELETE CASCADE,
+    FOREIGN KEY (club_id)         REFERENCES clubs(club_id),
+
+    PRIMARY KEY (player_stats_id, club_id)
+);
+
+CREATE INDEX idx_understat_player_clubs_club ON understat_player_clubs(club_id);
