@@ -4,7 +4,7 @@ import HighlightCard from "../HighlightCard/HighlightCard";
 import type { LeagueCode } from "../Sidebar/Sidebar";
 import type {
   Match,
-  Scorer,
+  PlayersResponse,
   Standing,
   StandingsResponse,
 } from "../../types/api"; // Types for API responses
@@ -12,10 +12,7 @@ import type {
 // Base URL for the Express API
 const API_URL = "http://localhost:3001/api";
 
-// The database only stores the top 100 scorers per league-season
-const SCORER_LIMIT = 100;
-
-// Everything the highlight cards need, worked out from the standings, matches and scorers responses
+// Everything the highlight cards need, worked out from the standings, matches and players responses
 type HighlightsData = {
   league: LeagueCode;
   season: number;
@@ -32,46 +29,40 @@ type SeasonHighlightsProps = {
   season: number;
 };
 
-// Fetches standings + matches + scorers for a league's season and turns them into HighlightsData
+// Fetches standings + matches + player totals for a league's season and turns them into HighlightsData
 async function fetchHighlightsData(
   league: LeagueCode,
   season: number,
   signal: AbortSignal,
 ): Promise<HighlightsData> {
   // Run all three requests at the same time instead of one after the other
-  const [standingsRes, matchesRes, scorersRes] = await Promise.all([
+  const [standingsRes, matchesRes, playersRes] = await Promise.all([
     fetch(`${API_URL}/leagues/${league}/standings?season=${season}`, {
       signal,
     }),
     fetch(`${API_URL}/leagues/${league}/matches?season=${season}`, {
       signal,
     }),
-    fetch(
-      `${API_URL}/leagues/${league}/scorers?season=${season}&limit=${SCORER_LIMIT}`,
-      { signal },
-    ),
+    // limit=0 skips the player list, since only the league-wide totals are needed here
+    fetch(`${API_URL}/leagues/${league}/players?season=${season}&limit=0`, {
+      signal,
+    }),
   ]);
 
   // Check if all responses were successful before proceeding
-  if (!standingsRes.ok || !matchesRes.ok || !scorersRes.ok) {
+  if (!standingsRes.ok || !matchesRes.ok || !playersRes.ok) {
     throw new Error(`Could not load season highlights for ${league}`);
   }
 
   const { standings } = (await standingsRes.json()) as StandingsResponse;
   const matches = (await matchesRes.json()) as Match[];
-  const scorers = (await scorersRes.json()) as Scorer[];
+  const { totals } = (await playersRes.json()) as PlayersResponse;
 
   // Only matches that were actually played count here (AWARDED scores aren't real goals)
   const finished = matches.filter((match) => match.status === "FINISHED");
 
   const goalsScored = finished.reduce(
     (total, match) => total + (match.homeGoals ?? 0) + (match.awayGoals ?? 0),
-    0,
-  );
-
-  // NOTE: only covers the top 100 scorers, so this undercounts the league's real assist total
-  const assists = scorers.reduce(
-    (total, scorer) => total + (scorer.assists ?? 0),
     0,
   );
 
@@ -95,7 +86,7 @@ async function fetchHighlightsData(
     season,
     matchesFinished: finished.length,
     goalsScored,
-    assists,
+    assists: totals.assists, // Every player's assists, from Understat
     cleanSheets,
     streakClub,
   };
