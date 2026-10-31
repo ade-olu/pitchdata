@@ -35,7 +35,7 @@ $standings-table-relegation-row-hover: color.mix(
     table-layout: fixed;
   }
 
-  // Column widths from Figma (1120px wide: 58px position, 48px per stat, 193px form)
+  // Fixed column widths so every row lines up
   &__col-position {
     width: rem(60);
   }
@@ -205,7 +205,7 @@ $standings-table-relegation-row-hover: color.mix(
     }
   }
 
-  // Phones (as in Figma's mobile frame): drop W/D/L too, so the club name
+  // Phones: drop W/D/L too, so the club name
   // keeps its room without scrolling sideways
   @include container-up-to(rem(499)) {
     &__table {

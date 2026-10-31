@@ -1,8 +1,8 @@
 @use "sass:map";
 @use "functions" as *;
 
-// Type scale (px font sizes from Figma) and the line height for each.
-// Bigger text gets tighter lines; large text also gets the -0.5px tracking used in Figma.
+// Type scale (px font sizes) and the line height for each.
+// Bigger text gets tighter lines; large text also gets -0.5px tracking.
 $type-scale: (
   10: normal,
   12: normal,

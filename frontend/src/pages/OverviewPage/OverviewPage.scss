@@ -6,7 +6,7 @@
   &__grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: rem(32) rem(24); // Rows 32px apart, columns 24px apart (as in Figma)
+    gap: rem(32) rem(24); // Rows 32px apart, columns 24px apart
 
     @include below-tablet {
       row-gap: rem(24);

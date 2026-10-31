@@ -132,7 +132,7 @@ export default function StandingsTable({
     return ZONES.find(({ key }) => key === zone);
   };
 
-  // The European competitions are always listed (as in Figma); the relegation
+  // The European competitions are always listed; the relegation
   // zones only when a shown row is in them, so the overview's top 5 doesn't list them
   const legend = ZONES.filter(
     ({ key }) =>

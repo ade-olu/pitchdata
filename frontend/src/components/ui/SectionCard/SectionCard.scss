@@ -1,6 +1,6 @@
 @use "@/styles/foundations" as *;
 
-// The gap varies in Figma (16-32px), so sections can override it via className
+// Sections can override the gap (16-32px) via className
 .section-card {
   display: flex;
   flex-direction: column;

@@ -8,7 +8,7 @@ $laptop: 1024px;
 $phone-small: 402px;
 $phone-medium: 412px;
 
-// Below the Figma phone width (small phones): smaller headings that would wrap
+// Below the phone width (small phones): smaller headings that would wrap
 @mixin below-phone {
   @media (max-width: #{$phone - 0.02px}) {
     @content;
@@ -59,7 +59,7 @@ $phone-medium: 412px;
 
 // Content area widths (beside the sidebar, for container queries on .app__content)
 $content-grid-two: rem(560); // Overview and Standings grids go to 2 columns
-$content-phone: rem(600); // Figma's phone frame: banners get phone padding and type
+$content-phone: rem(600); // Phone width: banners get phone padding and type
 $content-medium: rem(900); // Banners stack; award and result cards go to 2 columns
 $content-grid-four: rem(1000); // Grids go to 4 columns
 
