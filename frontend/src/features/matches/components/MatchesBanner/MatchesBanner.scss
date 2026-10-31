@@ -73,11 +73,11 @@
   }
 
   &__percent {
-    @include text(32);
+    @include text(28);
     font-weight: 600;
 
     @include container-up-to($content-phone) {
-      @include text(28);
+      @include text(24);
     }
   }
 
